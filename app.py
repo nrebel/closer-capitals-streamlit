@@ -177,7 +177,7 @@ def main():
         st.write('Welcome to the World Capitals Information App!')
         
     elif choice == 'View Capitals':
-        st.subheader('View Capitals')
+        st.subheader('View Specific City')
         country = st.text_input('Enter country name')
         if country:
             result = df[df['country'].str.contains(country, case=False)]
@@ -185,12 +185,14 @@ def main():
                 selected_city = st.selectbox('Select a city', result['city'])
                 if selected_city:
                     city_data = get_closer_foreign_capitals(selected_city, country, 'resources/worldcities.csv')
-                    st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
+                    # st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
                     city_map = create_map_with_arcs(city_data, 'resources/worldcities.csv')
                     if city_map:
                         folium_static(city_map)
-                    for city in city_data['closer_capitals']:
-                        st.write(f"city: {city}")
+                    st.dataframe(city_data['closer_capitals'], column_config={
+                        "0": "City",
+                        "1": "Distance",
+                        "2": "Country"})
             else:
                 st.write('No capitals found for the given country.')
 
@@ -211,8 +213,10 @@ def main():
             city_map = create_map_with_arcs(city_data, 'resources/worldcities.csv')
             if city_map:
                 folium_static(city_map)
-            for city in city_data['closer_capitals']:
-                st.write(f"City: {city[0]}, Distance: {city[1]}, Country: {city[2]}")
+            st.dataframe(city_data['closer_capitals'], column_config={
+                "0": "City",
+                "1": "Distance",
+                "2": "Country"})
 
     elif choice == 'About':
         st.subheader('About')
