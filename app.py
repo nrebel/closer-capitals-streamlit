@@ -189,6 +189,8 @@ def main():
                     city_map = create_map_with_arcs(city_data, 'resources/worldcities.csv')
                     if city_map:
                         folium_static(city_map)
+                    for city in city_data['closer_capitals']:
+                        st.write(f"city: {city}")
             else:
                 st.write('No capitals found for the given country.')
 
@@ -199,13 +201,18 @@ def main():
     
     elif choice == 'City with Most Closer Capitals':
         st.subheader('City with Most Closer Capitals')
-        country = st.text_input('Enter country name to find the city with most closer capitals')
+        country = st.text_input('Enter country name', value="Germany")
         if country:
+            result = df[df['country'].str.contains(country, case=False)]
+        if not result.empty:
+            country = st.selectbox('Select a country', result['country'].unique())
             city_data = find_city_with_most_closer_capitals(country, 'resources/worldcities.csv')
             st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
             city_map = create_map_with_arcs(city_data, 'resources/worldcities.csv')
             if city_map:
                 folium_static(city_map)
+            for city in city_data['closer_capitals']:
+                st.write(f"City: {city[0]}, Distance: {city[1]}, Country: {city[2]}")
 
     elif choice == 'About':
         st.subheader('About')
