@@ -41,6 +41,7 @@ def find_city_with_most_closer_capitals(country, file_path):
     if len(country_cities) == 1 or len(country_capital) == 0:
         results.append({
             'city': country_cities['city'].values[0],
+            'country': country,
             'closer_capitals_count': 0,
             'closer_capitals': [],
             'own_capital_distance': 0
@@ -62,6 +63,7 @@ def find_city_with_most_closer_capitals(country, file_path):
 
         results.append({
             'city': city['city'],
+            'country': country,
             'closer_capitals_count': len(closer_capitals),
             'closer_capitals': closer_capitals,
             'own_capital_distance': own_capital_distance
@@ -70,6 +72,7 @@ def find_city_with_most_closer_capitals(country, file_path):
     # Find the city with the maximum number of closer foreign capitals
     most_closer_capitals_city = max(results, key=lambda x: x['closer_capitals_count'])
     return most_closer_capitals_city
+
 
 # Function to get closer foreign capitals
 def get_closer_foreign_capitals(city, country, file_path):
