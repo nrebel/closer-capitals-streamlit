@@ -3,6 +3,51 @@ import pandas as pd
 import folium
 from streamlit_folium import folium_static
 from math import radians, sin, cos, sqrt, atan2
+import sqlite3
+import json
+
+# Database functions
+def create_connection(db_file):
+    """Create a database connection to the SQLite database specified by db_file."""
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+    except sqlite3.Error as e:
+        print(e)
+    return conn
+
+def create_table(conn):
+    """Create a table for storing request data."""
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        city TEXT NOT NULL,
+        country TEXT NOT NULL,
+        data TEXT NOT NULL
+    );
+    """
+    try:
+        c = conn.cursor()
+        c.execute(create_table_sql)
+    except sqlite3.Error as e:
+        print(e)
+
+def insert_request(conn, city, country, data):
+    """Insert a new request into the requests table."""
+    sql = '''INSERT INTO requests(city, country, data) VALUES(?,?,?)'''
+    cur = conn.cursor()
+    cur.execute(sql, (city, country, data))
+    conn.commit()
+    return cur.lastrowid
+
+def get_request(conn, city, country):
+    """Query request data by city and country."""
+    cur = conn.cursor()
+    cur.execute("SELECT data FROM requests WHERE city=? AND country=?", (city, country))
+    rows = cur.fetchall()
+    if rows:
+        return rows[0][0]
+    return None
 
 # Load data
 @st.cache_data
@@ -23,8 +68,12 @@ def haversine(lon1, lat1, lon2, lat2):
     return distance
 
 # Function to find the city with most closer capitals
-def find_city_with_most_closer_capitals(country, file_path):
-    # Load data
+def find_city_with_most_closer_capitals(country, file_path, conn):
+    # Check if data exists in the database
+    cached_data = get_request(conn, "ALL_CITIES", country)
+    if cached_data:
+        return json.loads(cached_data)
+    
     world_cities = pd.read_csv(file_path)
     if 'country' not in world_cities.columns:
         raise KeyError("The column 'country' is not found in the data.")
@@ -71,12 +120,20 @@ def find_city_with_most_closer_capitals(country, file_path):
 
     # Find the city with the maximum number of closer foreign capitals
     most_closer_capitals_city = max(results, key=lambda x: x['closer_capitals_count'])
+    
+    # Save to database
+    insert_request(conn, "ALL_CITIES", country, json.dumps(most_closer_capitals_city))
+    
     return most_closer_capitals_city
 
 
 # Function to get closer foreign capitals
-def get_closer_foreign_capitals(city, country, file_path):
-    # Load the data
+def get_closer_foreign_capitals(city, country, file_path, conn):
+    # Check if data exists in the database
+    cached_data = get_request(conn, city, country)
+    if cached_data:
+        return json.loads(cached_data)
+    
     world_cities = pd.read_csv(file_path)
     if 'country' not in world_cities.columns:
         raise KeyError("The column 'country' is not found in the data.")
@@ -110,6 +167,10 @@ def get_closer_foreign_capitals(city, country, file_path):
         'closer_capitals': closer_capitals,
         'own_capital_distance': own_capital_distance
     }
+    
+    # Save to database
+    insert_request(conn, city, country, json.dumps(result))
+
 
     return result
 
@@ -166,6 +227,10 @@ def create_map_with_arcs(city_data, file_path):
 # Main function
 def main():
     st.title('World Capitals Information')
+    
+    database = "resources/requests.db"
+    conn = create_connection(database)
+    create_table(conn)
 
     menu = ['Home', 'View Capitals', 'Stored Countries', 'City with Most Closer Capitals', 'About']
     choice = st.sidebar.selectbox('Menu', menu)
@@ -184,7 +249,7 @@ def main():
             if not result.empty:
                 selected_city = st.selectbox('Select a city', result['city'])
                 if selected_city:
-                    city_data = get_closer_foreign_capitals(selected_city, country, 'resources/worldcities.csv')
+                    city_data = get_closer_foreign_capitals(selected_city, country, 'resources/worldcities.csv', conn=conn)
                     # st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
                     city_map = create_map_with_arcs(city_data, 'resources/worldcities.csv')
                     if city_map:
@@ -208,7 +273,7 @@ def main():
             result = df[df['country'].str.contains(country, case=False)]
         if not result.empty:
             country = st.selectbox('Select a country', result['country'].unique())
-            city_data = find_city_with_most_closer_capitals(country, 'resources/worldcities.csv')
+            city_data = find_city_with_most_closer_capitals(country, 'resources/worldcities.csv', conn=conn)
             st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
             city_map = create_map_with_arcs(city_data, 'resources/worldcities.csv')
             if city_map:
