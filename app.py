@@ -49,6 +49,13 @@ def get_request(conn, city, country):
         return rows[0][0]
     return None
 
+
+def list_table(conn, table):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM " + table)
+    rows = cur.fetchall()
+    return rows
+    
 # Load data
 @st.cache_data
 def load_data():
@@ -208,7 +215,7 @@ def create_map_with_arcs(city_data, file_path):
     city_map = folium.Map(location=[target_city['lat'], target_city['lng']], zoom_start=5)
     folium.Marker([target_city['lat'], target_city['lng']],
                   popup=f"{city_data['city']} (Own City, {len(city_data['closer_capitals'])} closer capitals)",
-                  icon=folium.Icon(color='green')).add_to(city_map)
+                  icon=folium.Icon(color='blue')).add_to(city_map)
     folium.Marker([own_capital['lat'], own_capital['lng']],
                   popup=f"{own_capital['city']} (Own Capital, {haversine(target_city['lng'], target_city['lat'], own_capital['lng'], own_capital['lat']): .2f} km)",
                   icon=folium.Icon(color='red')).add_to(city_map)
@@ -219,6 +226,9 @@ def create_map_with_arcs(city_data, file_path):
         cap_info = capitals[(capitals['city'] == capital[0]) & (capitals['country'] == capital[2])]
         if not cap_info.empty:
             cap_info = cap_info.iloc[0]
+            folium.Marker([cap_info['lat'], cap_info['lng']],
+                  popup=f"{cap_info['city']}, {cap_info['country']} ({capital[1]:.2f} km)",
+                  icon=folium.Icon(color='green')).add_to(city_map)
             folium.PolyLine(locations=[[target_city['lat'], target_city['lng']],
                                        [cap_info['lat'], cap_info['lng']]],
                             color="blue", weight=2, tooltip=f"{capital[0]}: {capital[1]:.2f} km").add_to(city_map)
@@ -240,6 +250,7 @@ def main():
     if choice == 'Home':
         st.subheader('Home')
         st.write('Welcome to the World Capitals Information App!')
+        list_table(conn, "requests")
         
     elif choice == 'View Capitals':
         st.subheader('View Specific City')
@@ -263,8 +274,10 @@ def main():
 
     elif choice == 'Stored Countries':
         st.subheader('Stored Countries')
-        stored_countries = df['country'].unique()
+        stored_countries = df['country'].drop_duplicates().sort_values() #.sort_values(ascending=True).unique()
         st.write(stored_countries)
+        st.divider()
+        df
     
     elif choice == 'City with Most Closer Capitals':
         st.subheader('City with Most Closer Capitals')
