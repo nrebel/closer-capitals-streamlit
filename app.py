@@ -262,11 +262,12 @@ def main():
 
     elif choice == 'View Capitals':
         st.subheader('View Specific City')
-        country = st.text_input('Enter country name')
+        countries = sorted(df['country'].unique())  # Get the unique list of countries from the data
+        country = st.selectbox('Select a country', countries)  # Use a selectbox to show all countries
         if country:
             result = df[df['country'].str.contains(country, case=False)]
             if not result.empty:
-                selected_city = st.selectbox('Select a city', result['city'])
+                selected_city = st.selectbox('Select a city', sorted(result['city']))
                 if selected_city:
                     city_data = get_closer_foreign_capitals(selected_city, country, 'resources/worldcities.csv', conn=conn)
                     # st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
@@ -289,7 +290,8 @@ def main():
 
     elif choice == 'City with Most Closer Capitals':
         st.subheader('City with Most Closer Capitals')
-        country = st.text_input('Enter country name', value="Germany")
+        countries = sorted(df['country'].unique())  # Get the unique list of countries from the data
+        country = st.selectbox('Select a country', countries)  # Use a selectbox to show all countries
         if country:
             result = df[df['country'].str.contains(country, case=False)]
         if not result.empty:
