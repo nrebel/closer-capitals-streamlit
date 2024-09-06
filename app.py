@@ -56,6 +56,7 @@ def list_table(conn, table):
     rows = cur.fetchall()
     return rows
     
+    
 # Load data
 @st.cache_data
 def load_data():
@@ -250,7 +251,6 @@ def main():
     if choice == 'Home':
         st.subheader('Home')
         st.write('Welcome to the World Capitals Information App!')
-        list_table(conn, "requests")
         
     elif choice == 'View Capitals':
         st.subheader('View Specific City')
@@ -274,11 +274,11 @@ def main():
 
     elif choice == 'Stored Countries':
         st.subheader('Stored Countries')
-        stored_countries = df['country'].drop_duplicates().sort_values() #.sort_values(ascending=True).unique()
-        st.write(stored_countries)
-        st.divider()
-        df
-    
+        rows = list_table(conn, "requests")
+        data = json.dumps(rows)
+        frame = pd.read_json(data)
+        st.table(frame)
+                
     elif choice == 'City with Most Closer Capitals':
         st.subheader('City with Most Closer Capitals')
         country = st.text_input('Enter country name', value="Germany")
