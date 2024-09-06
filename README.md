@@ -27,7 +27,7 @@ To run this app, you'll need the following:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repository/world-capitals-app.git
+   git clone https://github.com/nrebel/closer-capitals-streamlit.git
    cd world-capitals-app
    ```
 
