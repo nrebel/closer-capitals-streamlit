@@ -251,7 +251,7 @@ def main():
     conn = create_connection(database)
     create_table(conn)
 
-    menu = ['Home', 'View Capitals', 'Stored Countries', 'City with Most Closer Capitals', 'About']
+    menu = ['Home', 'View Capitals', 'City with Most Closer Capitals', 'Stored Countries', 'About']
     choice = st.sidebar.selectbox('Menu', menu)
 
     df = load_data()
@@ -277,7 +277,7 @@ def main():
                 selected_city = st.selectbox('Select a city', sorted(result['city']))
                 if selected_city:
                     city_data = get_closer_foreign_capitals(selected_city, country, 'resources/worldcities.csv', conn=conn)
-                    # st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
+                    st.write(f"City: {city_data['city']} ({city_data['closer_capitals_count']} closer capitals)")
                     city_map = create_map_with_arcs(city_data, 'resources/worldcities.csv')
                     if city_map:
                         folium_static(city_map)
@@ -287,13 +287,6 @@ def main():
                         "2": "Country"})
             else:
                 st.write('No capitals found for the given country.')
-
-    elif choice == 'Stored Countries':
-        st.subheader('Stored Countries')
-        rows = list_table(conn, "requests")
-        data = json.dumps(rows)
-        frame = pd.read_json(data)
-        st.table(frame)
 
     elif choice == 'City with Most Closer Capitals':
         st.subheader('City with Most Closer Capitals')
@@ -312,6 +305,13 @@ def main():
                 "0": "City",
                 "1": "Distance",
                 "2": "Country"})
+            
+    elif choice == 'Stored Countries':
+        st.subheader('Stored Countries')
+        rows = list_table(conn, "requests")
+        data = json.dumps(rows)
+        frame = pd.read_json(data)
+        st.table(frame)
 
     elif choice == 'About':
         st.subheader('About')
@@ -329,6 +329,7 @@ def main():
 
         Now go ahead and dive into the world of capitals! 🚀
         """)
+
 
 if __name__ == '__main__':
     main()
