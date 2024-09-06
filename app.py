@@ -6,6 +6,7 @@ from math import radians, sin, cos, sqrt, atan2
 import sqlite3
 import json
 
+
 # Database functions
 def create_connection(db_file):
     """Create a database connection to the SQLite database specified by db_file."""
@@ -15,6 +16,7 @@ def create_connection(db_file):
     except sqlite3.Error as e:
         print(e)
     return conn
+
 
 def create_table(conn):
     """Create a table for storing request data."""
@@ -32,6 +34,7 @@ def create_table(conn):
     except sqlite3.Error as e:
         print(e)
 
+
 def insert_request(conn, city, country, data):
     """Insert a new request into the requests table."""
     sql = '''INSERT INTO requests(city, country, data) VALUES(?,?,?)'''
@@ -39,6 +42,7 @@ def insert_request(conn, city, country, data):
     cur.execute(sql, (city, country, data))
     conn.commit()
     return cur.lastrowid
+
 
 def get_request(conn, city, country):
     """Query request data by city and country."""
@@ -55,13 +59,14 @@ def list_table(conn, table):
     cur.execute("SELECT * FROM " + table)
     rows = cur.fetchall()
     return rows
-    
-    
+
+
 # Load data
 @st.cache_data
 def load_data():
     df = pd.read_csv('resources/worldcities.csv')
     return df
+
 
 # Haversine function to calculate distance between two points on the Earth
 def haversine(lon1, lat1, lon2, lat2):
@@ -75,13 +80,14 @@ def haversine(lon1, lat1, lon2, lat2):
     distance = R * c
     return distance
 
+
 # Function to find the city with most closer capitals
 def find_city_with_most_closer_capitals(country, file_path, conn):
     # Check if data exists in the database
     cached_data = get_request(conn, "ALL_CITIES", country)
     if cached_data:
         return json.loads(cached_data)
-    
+
     world_cities = pd.read_csv(file_path)
     if 'country' not in world_cities.columns:
         raise KeyError("The column 'country' is not found in the data.")
@@ -128,10 +134,10 @@ def find_city_with_most_closer_capitals(country, file_path, conn):
 
     # Find the city with the maximum number of closer foreign capitals
     most_closer_capitals_city = max(results, key=lambda x: x['closer_capitals_count'])
-    
+
     # Save to database
     insert_request(conn, "ALL_CITIES", country, json.dumps(most_closer_capitals_city))
-    
+
     return most_closer_capitals_city
 
 
@@ -141,7 +147,7 @@ def get_closer_foreign_capitals(city, country, file_path, conn):
     cached_data = get_request(conn, city, country)
     if cached_data:
         return json.loads(cached_data)
-    
+
     world_cities = pd.read_csv(file_path)
     if 'country' not in world_cities.columns:
         raise KeyError("The column 'country' is not found in the data.")
@@ -175,12 +181,12 @@ def get_closer_foreign_capitals(city, country, file_path, conn):
         'closer_capitals': closer_capitals,
         'own_capital_distance': own_capital_distance
     }
-    
+
     # Save to database
     insert_request(conn, city, country, json.dumps(result))
 
-
     return result
+
 
 # Function to display capital information
 def display_capital_info(capital_data):
@@ -194,6 +200,7 @@ def display_capital_info(capital_data):
         'lon': [capital_data['lng']]
     }))
 
+
 # Function to create map with arcs
 def create_map_with_arcs(city_data, file_path):
     world_cities = pd.read_csv(file_path)
@@ -201,7 +208,7 @@ def create_map_with_arcs(city_data, file_path):
     capitals = capitals.drop_duplicates(subset=['country'])
 
     # Extract target city information
-    target_city = world_cities[(world_cities['city'] == city_data['city']) & 
+    target_city = world_cities[(world_cities['city'] == city_data['city']) &
                                (world_cities['country'] == city_data['country'])]
 
     if target_city.empty:
@@ -235,10 +242,11 @@ def create_map_with_arcs(city_data, file_path):
                             color="blue", weight=2, tooltip=f"{capital[0]}: {capital[1]:.2f} km").add_to(city_map)
     return city_map
 
+
 # Main function
 def main():
     st.title('World Capitals Information')
-    
+
     database = "resources/requests.db"
     conn = create_connection(database)
     create_table(conn)
@@ -251,7 +259,7 @@ def main():
     if choice == 'Home':
         st.subheader('Home')
         st.write('Welcome to the World Capitals Information App!')
-        
+
     elif choice == 'View Capitals':
         st.subheader('View Specific City')
         country = st.text_input('Enter country name')
@@ -278,7 +286,7 @@ def main():
         data = json.dumps(rows)
         frame = pd.read_json(data)
         st.table(frame)
-                
+
     elif choice == 'City with Most Closer Capitals':
         st.subheader('City with Most Closer Capitals')
         country = st.text_input('Enter country name', value="Germany")
@@ -299,6 +307,7 @@ def main():
     elif choice == 'About':
         st.subheader('About')
         st.write('This app provides information about world capitals.')
+
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,5 @@
 
-# World Capitals Information App
+# Closer Capitals Streamlit App
 
 This Streamlit app provides detailed information about world capitals, allowing users to explore cities, find foreign capitals closer to their city than their own capital, and analyze stored requests. The app uses a local SQLite database to store data and features dynamic maps created with Folium.
 
@@ -28,7 +28,7 @@ To run this app, you'll need the following:
 1. Clone the repository:
    ```bash
    git clone https://github.com/nrebel/closer-capitals-streamlit.git
-   cd world-capitals-app
+   cd closer-capitals-streamlit
    ```
 
 2. Install the required dependencies:
@@ -74,6 +74,86 @@ The app stores the results of queries to avoid redundant calculations. If the sa
 ### Maps with Folium
 
 The app generates interactive maps with Folium, displaying the selected city, its own capital, and foreign capitals that are closer than the city's own capital. The distances between the cities are shown on the map as lines.
+
+## Running the App with Docker
+
+You can also run the app in a Docker container for a more isolated and reproducible environment.
+
+### Docker Prerequisites
+
+- **Docker**: Make sure Docker is installed on your machine. You can download and install Docker from [here](https://www.docker.com/products/docker-desktop).
+
+### Docker Instructions
+
+1. **Create a `Dockerfile`** in the root of the project (or use the one provided):
+
+   ```Dockerfile
+   # Base image
+   FROM python:3.9-slim
+
+   # Set the working directory
+   WORKDIR /app
+
+   # Create a non-root user and group
+   RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+   # Copy the requirements file and install dependencies
+   COPY requirements.txt .
+
+   RUN pip install --no-cache-dir -r requirements.txt
+
+   # Copy the entire application code into the container
+   COPY . .
+
+   # Change ownership of the application files to the non-root user
+   RUN chown -R appuser:appuser /app
+
+   # Switch to the non-root user
+   USER appuser
+
+   # Expose port 8501 for Streamlit
+   EXPOSE 8501
+
+   # Command to run the app
+   CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+   ```
+
+2. **Create a `requirements.txt` file** if it doesn’t already exist. It should contain the necessary dependencies:
+
+   ```txt
+   streamlit
+   pandas
+   folium
+   streamlit-folium
+   sqlite3
+   ```
+
+3. **Build the Docker image**:
+   In the root of the project, run the following command to build the Docker image:
+   
+   ```bash
+   docker build -t closer-capitals-streamlit .
+   ```
+
+4. **Run the Docker container**:
+   After the image is built, you can run the app in a container:
+   
+   ```bash
+   docker run -p 8501:8501 closer-capitals-streamlit
+   ```
+
+5. **Access the app**:
+   Open your browser and go to `http://localhost:8501` to access the Streamlit app running inside Docker.
+
+### Database Persistence in Docker
+
+If you want the SQLite database to persist across container restarts, you can mount a volume to store the database file. Use the following command to mount a volume:
+
+```bash
+docker run -p 8501:8501 -v $(pwd)/resources:/app/resources closer-capitals-streamlit
+```
+
+This ensures that the `resources` directory in the container is mapped to the `resources` directory on your local machine, allowing the database to persist.
 
 ## Contributing
 
