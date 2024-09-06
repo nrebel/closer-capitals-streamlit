@@ -257,8 +257,15 @@ def main():
     df = load_data()
 
     if choice == 'Home':
-        st.subheader('Home')
-        st.write('Welcome to the World Capitals Information App!')
+        st.subheader('Closer Capitals Streamlit App')
+        st.image('resources/image.png', caption='Explore Global Capitals', use_column_width=True)
+        st.markdown("""
+        Explore global capitals and uncover unique geographic insights with the **Closer Capitals Streamlit App**. This app allows users to perform two fascinating analyses:
+        1. **Find Closer Foreign Capitals**: For a selected city in any country, the app identifies all foreign capitals that are geographically closer to that city than its own national capital. This provides a surprising look at how proximity to foreign capitals can vary from expected distances.
+        2. **Find the City with the Most Nearby Foreign Capitals**: For a selected country, the app identifies the city that has the highest number of foreign capitals closer to it than its own national capital. This reveals which city is geographically most surrounded by foreign capitals.
+        **Disclaimer**: The results are based on the data from the `worldcities.csv` file used in the app. The accuracy of the results depends on the completeness and correctness of this dataset.
+        Perfect for geography enthusiasts, educators, and anyone curious about the spatial relationships between world capitals.
+        """)
 
     elif choice == 'View Capitals':
         st.subheader('View Specific City')
@@ -308,8 +315,20 @@ def main():
 
     elif choice == 'About':
         st.subheader('About')
-        st.write('This app provides information about world capitals.')
 
+        st.markdown("""
+        **Disclaimer**: 
+        This app is a fun project and comes with absolutely no warranty—none, zero, zilch! 😄 
+        If it gives you unexpected results, that's just part of the charm. 
+
+        Think of it as a treasure hunt for capitals! 🗺️
+
+        While we’ve done our best to make sure everything works, there may be bugs hiding out in the code. But hey, bugs are just extra features, right? 🐞
+
+        If you have any suggestions, ideas, or just want to say hi, feel free to send them over. We love hearing from curious explorers like you! 🌍
+
+        Now go ahead and dive into the world of capitals! 🚀
+        """)
 
 if __name__ == '__main__':
     main()
