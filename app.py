@@ -303,8 +303,8 @@ def main():
                 folium_static(city_map)
             st.dataframe(city_data['closer_capitals'], column_config={
                 "0": "City",
-                "1": "Distance",
-                "2": "Country"})
+                "2": "Country",
+                "1": "Distance (km)"})
             
     elif choice == 'Stored Countries':
         st.subheader('Stored Countries')
